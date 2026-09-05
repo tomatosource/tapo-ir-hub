@@ -31,7 +31,15 @@ def parse_ac_status(child: dict[str, Any]) -> dict[str, int]:
     }
     for key, value in fallbacks.items():
         if key not in state and value is not None:
-            state[key] = int(bool(value)) if key == "P" else int(value)
+            try:
+                parsed = int(value)
+            except (TypeError, ValueError, OverflowError):
+                continue
+            if isinstance(value, float) and value != parsed:
+                continue
+            if key == "P" and parsed not in (0, 1):
+                continue
+            state[key] = parsed
     return state
 
 
@@ -43,6 +51,10 @@ def build_ac_payload(state: dict[str, int]) -> dict[str, Any]:
             "The hub has not reported a complete AC state; missing "
             + ", ".join(missing)
         )
+    if any(type(state[key]) is not int for key in REQUIRED_AC_FIELDS):
+        raise AcStateError("AC state fields must be integers")
+    if state["P"] not in (0, 1):
+        raise AcStateError("AC power state must be 0 or 1")
     return {
         "power": bool(state["P"]),
         "on": bool(state["P"]),
