@@ -347,7 +347,7 @@ async def ws_stop_learn(
         vol.Required("type"): WS_DEBUG_QUERY,
         vol.Required("remote_device_id"): cv.string,
         vol.Required("method"): cv.string,
-        vol.Optional("params"): vol.Any(dict, list, None),
+        vol.Optional("params"): dict,
         vol.Optional("batched", default=True): cv.boolean,
     }
 )
