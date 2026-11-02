@@ -45,7 +45,7 @@ def parse_ac_status(child: dict[str, Any]) -> dict[str, int]:
 
 def build_ac_payload(
     state: dict[str, int], *, pressed_fid: int | None = None
-) -> dict[str, int]:
+) -> dict[str, Any]:
     """Build the native H110 sendIrCmdByStatus state payload."""
     missing = sorted(REQUIRED_AC_FIELDS - state.keys())
     if missing:
@@ -58,7 +58,9 @@ def build_ac_payload(
     if state["P"] not in (0, 1):
         raise AcStateError("AC power state must be 0 or 1")
     payload = {
-        "power": state["P"],
+        # The hub only transmits a power-on from off when "on" is present.
+        "power": bool(state["P"]),
+        "on": bool(state["P"]),
         "mode": state["M"],
         "temp": state["T"],
         "wind_speed": state["S"],

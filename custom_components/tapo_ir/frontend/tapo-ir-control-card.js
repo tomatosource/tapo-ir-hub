@@ -1,4 +1,4 @@
-const CARD_VERSION = "2.1.2";
+const CARD_VERSION = "2.1.3";
 const NEW_REMOTE = "__new_remote__";
 const NEW_BUTTON = "__new_button__";
 const CARD_DEFAULTS = Object.freeze({
