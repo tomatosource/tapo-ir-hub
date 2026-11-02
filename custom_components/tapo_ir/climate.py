@@ -197,6 +197,12 @@ class TapoIrAcClimate(
             "raw_tapo_state": dict(self._state),
         }
 
+    def _mode_pressed_fid(self) -> int:
+        # The hub sends the IR frame for the pressed button; a mode-button
+        # frame is ignored by a unit that is off, so power-on must be sent
+        # as a power press (the full state still sets mode and temperature).
+        return 2 if self._state.get("P") == 1 else 1
+
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         if hvac_mode is HVACMode.OFF:
             await self.coordinator.async_control_ac(
@@ -225,7 +231,7 @@ class TapoIrAcClimate(
 
         await self.coordinator.async_control_ac(
             self._device_id,
-            pressed_fid=2,
+            pressed_fid=self._mode_pressed_fid(),
             **changes,
         )
 
@@ -264,7 +270,7 @@ class TapoIrAcClimate(
                 power=True,
                 mode=_HVAC_TO_TAPO[hvac_mode],
                 temp=-1 if hvac_mode in _NON_TEMPERATURE_HVAC_MODES else rounded,
-                pressed_fid=2,
+                pressed_fid=self._mode_pressed_fid(),
             )
             return
         if self.hvac_mode in _NON_TEMPERATURE_HVAC_MODES:

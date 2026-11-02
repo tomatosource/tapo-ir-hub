@@ -367,7 +367,24 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
         coordinator.async_control_ac = AsyncMock()
         await climate.async_set_temperature(temperature=23, hvac_mode=Modes.HEAT)
         coordinator.async_control_ac.assert_awaited_once_with(
-            "ac", power=True, mode=1, temp=23, pressed_fid=2
+            "ac", power=True, mode=1, temp=23, pressed_fid=1
+        )
+
+    async def test_climate_power_on_uses_power_fid_mode_change_uses_mode_fid(self):
+        coordinator = self.coordinator()
+        device = {"device_id": "ac", "name": "AC", "ac_state": {"P": 0, "M": 1, "T": 24}}
+        coordinator.data = {"ac": device}
+        climate = runtime.climate.TapoIrAcClimate(coordinator, device)
+        coordinator.async_control_ac = AsyncMock()
+        await climate.async_set_hvac_mode(Modes.FAN_ONLY)
+        coordinator.async_control_ac.assert_awaited_once_with(
+            "ac", pressed_fid=1, power=True, mode=3, temp=-1
+        )
+        device["ac_state"] = {"P": 1, "M": 3, "T": -1}
+        coordinator.async_control_ac.reset_mock()
+        await climate.async_set_temperature(temperature=24, hvac_mode=Modes.HEAT)
+        coordinator.async_control_ac.assert_awaited_once_with(
+            "ac", power=True, mode=1, temp=24, pressed_fid=2
         )
 
     async def test_inventory_isolates_failed_hubs(self):
