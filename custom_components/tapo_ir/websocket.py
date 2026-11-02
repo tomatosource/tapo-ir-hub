@@ -15,6 +15,7 @@ from .api import TapoIrError
 from .const import (
     DOMAIN,
     WS_CREATE_REMOTE,
+    WS_DEBUG_QUERY,
     WS_DELETE_KEY,
     WS_DELETE_REMOTE,
     WS_LEARN,
@@ -340,6 +341,37 @@ async def ws_stop_learn(
     connection.send_result(msg["id"], {"stopped": stopped})
 
 
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): WS_DEBUG_QUERY,
+        vol.Required("remote_device_id"): cv.string,
+        vol.Required("method"): cv.string,
+        vol.Optional("params"): vol.Any(dict, list, None),
+        vol.Optional("batched", default=True): cv.boolean,
+    }
+)
+@websocket_api.async_response
+async def ws_debug_query(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Send one raw child request for protocol debugging."""
+    try:
+        coordinator = _remote_coordinator(hass, msg["remote_device_id"])
+        result = await coordinator.api.async_query_child(
+            msg["remote_device_id"],
+            msg["method"],
+            msg.get("params"),
+            batched=msg["batched"],
+        )
+    except (HomeAssistantError, TapoIrError) as err:
+        _send_error(connection, msg["id"], err)
+        return
+    connection.send_result(msg["id"], {"result": result})
+
+
 def async_register_websocket_api(hass: HomeAssistant) -> None:
     """Register all card API commands once at integration setup."""
     for command in (
@@ -351,5 +383,6 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
         ws_delete_remote,
         ws_learn,
         ws_stop_learn,
+        ws_debug_query,
     ):
         websocket_api.async_register_command(hass, command)

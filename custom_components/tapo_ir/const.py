@@ -52,5 +52,6 @@ WS_DELETE_KEY: Final = "tapo_ir/key/delete"
 WS_DELETE_REMOTE: Final = "tapo_ir/remote/delete"
 WS_LEARN: Final = "tapo_ir/learn"
 WS_STOP_LEARN: Final = "tapo_ir/learn/stop"
+WS_DEBUG_QUERY: Final = "tapo_ir/debug/query"
 
 REPAIR_SHARED_PARENT_UNAVAILABLE: Final = "shared_parent_unavailable"
