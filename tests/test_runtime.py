@@ -23,8 +23,14 @@ class Modes(str, Enum):
     OFF = "off"
     COOL = "cool"
     HEAT = "heat"
+    AUTO = "auto"
+    FAN_ONLY = "fan_only"
+    DRY = "dry"
     HEATING = "heating"
     COOLING = "cooling"
+    IDLE = "idle"
+    FAN = "fan"
+    DRYING = "drying"
 
 
 class Features(IntFlag):
@@ -360,7 +366,9 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(climate.hvac_action)
         coordinator.async_control_ac = AsyncMock()
         await climate.async_set_temperature(temperature=23, hvac_mode=Modes.HEAT)
-        coordinator.async_control_ac.assert_awaited_once_with("ac", temp=23, power=True, mode=1)
+        coordinator.async_control_ac.assert_awaited_once_with(
+            "ac", power=True, mode=1, temp=23, pressed_fid=2
+        )
 
     async def test_inventory_isolates_failed_hubs(self):
         good, bad = self.coordinator(), self.coordinator()

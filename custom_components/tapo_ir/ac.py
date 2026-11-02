@@ -43,8 +43,10 @@ def parse_ac_status(child: dict[str, Any]) -> dict[str, int]:
     return state
 
 
-def build_ac_payload(state: dict[str, int]) -> dict[str, Any]:
-    """Build a command only when every required state field is known."""
+def build_ac_payload(
+    state: dict[str, int], *, pressed_fid: int | None = None
+) -> dict[str, int]:
+    """Build the native H110 sendIrCmdByStatus state payload."""
     missing = sorted(REQUIRED_AC_FIELDS - state.keys())
     if missing:
         raise AcStateError(
@@ -55,11 +57,13 @@ def build_ac_payload(state: dict[str, int]) -> dict[str, Any]:
         raise AcStateError("AC state fields must be integers")
     if state["P"] not in (0, 1):
         raise AcStateError("AC power state must be 0 or 1")
-    return {
-        "power": bool(state["P"]),
-        "on": bool(state["P"]),
+    payload = {
+        "power": state["P"],
         "mode": state["M"],
         "temp": state["T"],
         "wind_speed": state["S"],
         "wind_direct": state["D"],
     }
+    if pressed_fid is not None:
+        payload["pressed_fid"] = int(pressed_fid)
+    return payload
